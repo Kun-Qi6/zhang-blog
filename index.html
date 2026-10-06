@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f6f9ff" />
+  <meta name="description" content="Zhang 的个人知识博客，记录阅读、技术与考研学习。" />
+  <title>Zhang's Blog｜记录 · 学习 · 成长</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%231677ff'/%3E%3Cpath d='M17 18h30L25 46h23' fill='none' stroke='white' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700;900&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css?v=6" />
+  <link rel="stylesheet" href="./layout.css?v=12" />
+  <link rel="stylesheet" href="./refinements.css?v=4" />
+  <link rel="stylesheet" href="./article-images.css?v=2" />
+  <link rel="stylesheet" href="./site-content.css?v=2" />
+  <link rel="stylesheet" href="./about.css?v=2" />
+</head>
+<body>
+  <aside id="side-navigation" class="side-navigation" aria-label="侧边导航">
+    <div class="side-nav-heading"><button id="side-nav-toggle" type="button" aria-expanded="false" aria-controls="side-navigation" aria-label="展开导航" title="展开导航"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16"></rect><path d="M9 4v16m5-11 3 3-3 3"></path></svg></button><span class="side-label">导航</span></div>
+    <nav class="side-nav" aria-label="网站栏目">
+      <a href="#/home" data-route title="首页" aria-label="首页"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10H3Zm6 10v-7h6v7"></path></svg><span class="side-label">首页</span></a>
+      <a href="#/category/reading" data-route title="读书文章" aria-label="读书文章"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5C9 3 5 3 3 4v15c3-1 6-1 9 1 3-2 6-2 9-1V4c-2-1-6-1-9 1Zm0 0v15"></path></svg><span class="side-label">读书文章</span></a>
+      <a href="#/category/tech" data-route title="技术博客" aria-label="技术博客"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7-5 5 5 5m10-10 5 5-5 5M14 4l-4 16"></path></svg><span class="side-label">技术博客</span></a>
+      <a href="#/category/exam" data-route title="考研总结" aria-label="考研总结"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m2 9 10-5 10 5-10 5Zm4 2v6c4 3 8 3 12 0v-6m4-2v8"></path></svg><span class="side-label">考研总结</span></a>
+      <div class="side-nav-divider"></div>
+      <a href="#/category/all" data-route title="文章归档" aria-label="文章归档"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h18v14H3Zm-1-5h20v5H2Zm7 10h6"></path></svg><span class="side-label">文章归档</span></a>
+      <a href="#/about" data-route title="关于我" aria-label="关于我"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-2a8 8 0 0 1 16 0v2"></path></svg><span class="side-label">关于我</span></a>
+    </nav>
+  </aside>
+  <header class="site-header" id="top">
+    <div class="nav-shell">
+      <a class="brand" href="#/home" aria-label="返回首页"><span>Zhang's</span> Blog</a>
+      <nav class="desktop-nav" aria-label="主导航">
+        <a class="active" href="#/home">首页</a><a href="#/category/reading">读书文章</a><a href="#/category/tech">技术博客</a><a href="#/category/exam">考研总结</a><a href="#/about">关于我</a>
+      </nav>
+      <div class="nav-actions">
+        <label class="search"><span class="sr-only">搜索文章</span><input id="search-input" type="search" placeholder="搜索文章…" /><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.6-3.6"></path></svg></label>
+        <button class="icon-button" id="theme-toggle" aria-label="切换夜间模式"><svg class="moon" viewBox="0 0 24 24"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5 8.5 8.5 0 1 0 20.5 14.2Z"></path></svg></button>
+        <a class="avatar" href="#/about" aria-label="关于我"><img src="./assets/profile-avatar.jpg" alt="张巍坤奇的头像" /></a>
+        <button class="icon-button menu-button" id="menu-toggle" aria-label="打开菜单" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"></path></svg></button>
+      </div>
+    </div>
+    <nav class="mobile-nav" id="mobile-nav" aria-label="移动端导航"><a href="#/home">首页</a><a href="#/category/reading">读书文章</a><a href="#/category/tech">技术博客</a><a href="#/category/exam">考研总结</a><a href="#/about">关于我</a></nav>
+  </header>
+
+  <main id="app">
+    <section class="hero home-hero home-hero-compact">
+      <img id="hero-image" src="./assets/home-cover.jpg" alt="夕阳下的江面" />
+      <video id="hero-video" playsinline preload="metadata" poster="./assets/home-cover.jpg" hidden aria-label="首页封面视频"></video>
+      <div class="hero-scrim"></div>
+      <div class="hero-content container">
+        <h1>记录，<em>学习</em>与成长。</h1>
+      </div>
+      <div class="hero-bottom"><button id="hero-playback" type="button" hidden aria-label="播放视频" title="播放视频"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 11 7-11 7Z" fill="currentColor" /></svg></button><span class="hero-location">济南 / JINAN</span><a href="#latest">向下阅读 <span aria-hidden="true">↓</span></a></div>
+    </section>
+
+    <section class="home-dashboard container" id="latest">
+      <aside class="left-rail">
+        <section class="rail-block profile-block">
+          <img class="profile-avatar" src="./assets/profile-avatar.jpg" alt="张巍坤奇的头像" />
+          <p class="kicker">ABOUT</p>
+          <h2>张巍坤奇</h2>
+          <p>网络工程专业在读。写技术、读书和备考笔记，也偶尔拍照。</p>
+          <a class="rail-link" href="#/about">查看个人介绍 →</a>
+        </section>
+        <nav class="rail-block channel-list" aria-label="文章栏目">
+          <p class="kicker">CHANNELS</p>
+          <a href="#/category/reading"><span>01</span><strong>读书文章</strong><small>读后感 · 书单</small></a>
+          <a href="#/category/tech"><span>02</span><strong>技术博客</strong><small>网络 · 编程</small></a>
+          <a href="#/category/exam"><span>03</span><strong>考研总结</strong><small>数学 · 专业课</small></a>
+        </nav>
+      </aside>
+      <section class="feed-panel" aria-label="最新文章">
+        <div class="dashboard-heading"><div><p class="kicker">RECENT POSTS</p><h2>最近更新</h2></div><a href="#/category/all">全部文章 →</a></div>
+        <div class="article-grid" id="latest-grid"></div>
+      </section>
+      <aside class="right-rail">
+        <section class="rail-block task-widget" aria-labelledby="task-widget-title">
+          <div class="widget-heading"><div><p class="kicker">IN PROGRESS</p><h2 id="task-widget-title">进行中的任务</h2></div></div><p class="widget-subtitle">把计划，一点点变成进展。</p>
+          <div id="task-widget-list" class="task-widget-list" aria-live="polite"><p class="widget-empty">还没有设置任务。</p></div>
+        </section>
+        <section class="rail-block year-widget" aria-labelledby="year-widget-title">
+          <div class="year-widget-top"><p class="kicker">YEAR IN REVIEW</p><h2 id="year-widget-title"><span id="summary-year">2026</span><br>年度总结</h2><p>记录这一年的积累与成长</p></div>
+          <div class="year-stat-grid"><a href="#/category/all"><span>发布文章</span><strong id="summary-total">0</strong><i aria-hidden="true">↗</i></a><a href="#/category/reading"><span>读书记录</span><strong id="summary-reading">0</strong><i aria-hidden="true">↗</i></a><a href="#/category/tech"><span>技术笔记</span><strong id="summary-tech">0</strong><i aria-hidden="true">↗</i></a><a href="#/category/exam"><span>考研总结</span><strong id="summary-exam">0</strong><i aria-hidden="true">↗</i></a></div>
+          <div class="year-progress-panel"><div id="summary-ring" class="summary-ring"><span id="summary-time">0%</span><small>年度时间</small></div><div class="year-time-copy"><span>今年已走过</span><p><strong id="summary-days">0</strong> 天</p><small>每一篇，都是积累。</small></div></div>
+          <div class="year-activity"><p>每月发布 <span id="summary-active-months">0 个活跃月</span></p><div id="summary-months" class="summary-months" aria-label="每月文章数量"></div><div class="month-axis" aria-hidden="true"><span>1月</span><span>6月</span><span>12月</span></div></div>
+        </section>
+        <section class="rail-block topic-block">
+          <div class="dashboard-heading compact"><div><p class="kicker">TOPICS</p><h2>主题索引</h2></div></div>
+          <div class="topic-grid" id="topic-grid"></div>
+        </section>
+        <section class="rail-block note-block">
+          <p class="kicker">NOTE</p><p>没有更新计划。想明白一点，就写下一点。</p><span>济南 · 2026</span>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <footer><div class="container footer-inner"><a class="brand" href="#/home"><span>Zhang's</span> Blog</a><p>在阅读中思考，在技术中探索，在学习中沉淀。</p><p>© 2026 Zhang. 保持好奇，持续记录。</p></div></footer>
+  <div class="search-panel" id="search-panel" aria-hidden="true"><div class="search-results-shell"><div class="search-panel-top"><p>搜索结果</p><button id="close-search" aria-label="关闭搜索">×</button></div><div id="search-results"></div></div></div>
+  <script src="./content-data.js"></script>
+  <script src="./content.js?v=3"></script>
+  <script src="./app.js?v=17"></script>
+</body>
+</html>
