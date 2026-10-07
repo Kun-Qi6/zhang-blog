@@ -1,7 +1,7 @@
 {
   "format": 1,
-  "generatedAt": "2026-10-06T14:59:41.692Z",
-  "articleCount": 0,
+  "generatedAt": "2026-10-07T05:38:25.842Z",
+  "articleCount": 2,
   "files": [
     ".nojekyll",
     "about.css",
@@ -18,6 +18,8 @@
     "assets/home-cover.jpg",
     "assets/profile-avatar.jpg",
     "assets/study-life.png",
+    "assets/uploads/1791349534659-61b9e5c0.png",
+    "assets/uploads/1791350139796-9a4325d5.png",
     "content-data.js",
     "content.js",
     "index.html",
