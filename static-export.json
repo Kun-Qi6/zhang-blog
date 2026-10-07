@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "generatedAt": "2026-10-07T05:38:25.842Z",
+  "generatedAt": "2026-10-07T07:09:21.480Z",
   "articleCount": 2,
   "files": [
     ".nojekyll",
@@ -22,11 +22,15 @@
     "assets/uploads/1791350139796-9a4325d5.png",
     "content-data.js",
     "content.js",
+    "hero-media.js",
     "index.html",
     "layout.css",
-    "media/4cbd0df6b3c986d111880f244c752165.mp4",
+    "media-controls.css",
+    "media/home-cover-desktop.mp4",
+    "media/home-cover-mobile.mp4",
     "refinements.css",
     "site-content.css",
-    "styles.css"
+    "styles.css",
+    "year-summary.js"
   ]
 }

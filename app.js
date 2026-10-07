@@ -1,6 +1,7 @@
 let articles=[];
 let site=null;
 let heroAutoplayAttempted=false;
+let heroController=null,heroMediaKey='',heroRenderVersion=0,summaryYear=new Date().getFullYear();
 let renderedRoute='/home',contentRefreshing=false,contentRefreshPending=false,contentRefreshTimer;
 const staticContent=window.BlogStaticData||null;
 async function readPublicData(resource){
@@ -33,51 +34,28 @@ function renderHomeContent(){
 }
 async function renderHero(){
   const hero=document.querySelector('.home-hero-compact');if(!hero)return;
+  const version=++heroRenderVersion;
   hero.querySelector('.hero-bottom>a').onclick=event=>{event.preventDefault();document.querySelector('#latest')?.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'})};
   try{
-    const settings=await readPublicData('appearance');if(!hero.isConnected)return;
+    const settings=await readPublicData('appearance');if(!hero.isConnected||version!==heroRenderVersion)return;
     hero.style.setProperty('--hero-height',`${settings.heroHeight}px`);hero.classList.toggle('media-only',!settings.showText);
-    const image=hero.querySelector('#hero-image'),video=hero.querySelector('#hero-video'),button=hero.querySelector('#hero-playback');
-    if(settings.heroType==='video'){
-      video.src=assetUrl(settings.heroUrl);video.loop=false;video.muted=false;video.hidden=true;image.hidden=false;button.hidden=false;
-      const sync=()=>{
-        const playing=!video.paused&&!video.ended;
-        const label=video.ended?'重新播放视频':playing&&video.muted?'开启视频声音':playing?'暂停视频':video.currentTime?'继续播放视频':'播放视频';
-        button.innerHTML=playing&&!video.muted?'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7zm7 0h4v14h-4z" fill="currentColor" /></svg>':'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 11 7-11 7Z" fill="currentColor" /></svg>';
-        button.setAttribute('aria-label',label);button.title=label;
-      };
-      video.addEventListener('play',sync);video.addEventListener('pause',sync);
-      video.addEventListener('volumechange',sync);
-      video.addEventListener('playing',()=>{video.hidden=false;image.hidden=true;sync()});
-      video.addEventListener('ended',()=>{video.hidden=true;image.hidden=false;sync()});
-      video.addEventListener('error',()=>{video.hidden=true;image.hidden=false;button.hidden=true});
-      const toggle=async()=>{
-        if(!video.paused&&!video.muted){video.pause();return}
-        if(video.ended)video.currentTime=0;
-        video.muted=false;
-        try{await video.play();sync()}catch{video.hidden=true;image.hidden=false;button.setAttribute('aria-label','视频暂时无法播放，点击重试');button.title='视频暂时无法播放，点击重试'}
-      };
-      button.onclick=toggle;
-      sync();
-      if(!heroAutoplayAttempted){
-        heroAutoplayAttempted=true;
-        try{await video.play()}catch(error){
-          // Browsers may require a user gesture for sound; still show the video once.
-          if(error.name==='NotAllowedError'&&hero.isConnected){video.muted=true;try{await video.play()}catch{video.hidden=true;image.hidden=false;sync()}}
-        }
-      }
-    }else{button.hidden=true;video.pause();video.hidden=true;image.hidden=false;image.src=assetUrl(settings.heroUrl);image.onerror=()=>{image.onerror=null;image.src=assetUrl('/assets/home-cover.jpg')}}
+    const key=JSON.stringify([settings.heroType,settings.heroUrl,settings.heroMobileUrl]);
+    if(heroController&&heroMediaKey===key)return;
+    heroController?.destroy();
+    heroController=createHeroMedia(hero,settings,{autoplay:!heroAutoplayAttempted,onAutoplayAttempt:()=>{heroAutoplayAttempted=true}});
+    heroMediaKey=key;
   }catch{/* The built-in photograph remains available if settings cannot load. */}
 }
 function renderYearSummary(){
-  const year=new Date().getFullYear(),yearArticles=articles.filter(article=>article.date?.startsWith(String(year)));
-  const counts={reading:0,tech:0,exam:0};const monthly=Array(12).fill(0);
-  for(const article of yearArticles){if(article.kind in counts)counts[article.kind]++;const month=Number(article.date.slice(5,7));if(month>=1&&month<=12)monthly[month-1]++}
-  const elapsed=Math.max(0,Math.min(100,Math.round((Date.now()-new Date(year,0,1))/(new Date(year+1,0,1)-new Date(year,0,1))*100)));
-  document.querySelector('#summary-year').textContent=year;document.querySelector('#summary-total').textContent=yearArticles.length;
+  const {year,total,lifetime,counts,monthly,elapsed,days,years}=BlogYearSummary.calculate(articles,summaryYear);
+  document.querySelector('#summary-year').textContent=year;document.querySelector('#summary-total').textContent=total;
+  const select=document.querySelector('#summary-year-select');select.innerHTML=years.map(value=>`<option value="${value}"${value===year?' selected':''}>${value} 年</option>`).join('');
+  select.onchange=()=>{summaryYear=Number(select.value);renderYearSummary()};
+  document.querySelector('#summary-lifetime').textContent=`累计发布 ${lifetime} 篇 · 本年度 ${total} 篇`;
+  document.querySelectorAll('.year-stat-grid a').forEach(link=>{link.href=`#/category/${link.dataset.kind}?year=${year}`;link.title=`查看 ${year} 年${link.querySelector('span').textContent}`});
   for(const kind of Object.keys(counts))document.querySelector('#summary-'+kind).textContent=counts[kind];
   document.querySelector('#summary-time').textContent=`${elapsed}%`;document.querySelector('#summary-ring').style.setProperty('--year-progress',`${elapsed}%`);
-  document.querySelector('#summary-days').textContent=Math.floor((new Date().setHours(0,0,0,0)-new Date(year,0,1))/86400000)+1;
+  document.querySelector('#summary-days').textContent=days;
   document.querySelector('#summary-active-months').textContent=`${monthly.filter(Boolean).length} 个活跃月`;
   const chart=document.querySelector('#summary-months');chart.replaceChildren();const max=Math.max(1,...monthly);
   monthly.forEach((count,index)=>{const bar=document.createElement('span');bar.className=count?'month-bar':'month-bar inactive';bar.style.setProperty('--bar-height',`${Math.max(7,Math.round(count/max*100))}%`);bar.title=`${index+1} 月发布 ${count} 篇`;bar.setAttribute('aria-label',bar.title);chart.append(bar)});
@@ -114,13 +92,13 @@ const articleBodies={
   'bgp-practice':`<p class="dropcap">BGP 是自治系统之间交换路由信息的核心协议。理解它，不能只记住命令，还要看清路径属性如何共同影响决策。</p><h2>先建立整体视图</h2><p>一个可靠的学习顺序是：邻居建立、路由通告、属性传播、最优路径选择，最后再进入策略控制。这样配置命令就不再是零散片段，而是协议状态变化的具体表达。</p><pre><code>router bgp 65001\n neighbor 10.0.12.2 remote-as 65002\n network 192.168.1.0 mask 255.255.255.0</code></pre><h2>实验中的检查清单</h2><p>先确认 TCP 179 端口与邻居状态，再查看路由是否进入 BGP 表，最后检查下一跳可达性。遇到问题时，沿着控制平面逐层定位，比重复敲命令更有效。</p><blockquote>协议学习的目标，是能够解释每一次状态变化，而不只是得到正确的终端输出。</blockquote>`,
   'os-knowledge':`<p class="dropcap">操作系统的知识点看似庞杂，核心始终围绕资源：处理器、内存、文件和设备如何被安全而高效地管理。</p><h2>用问题串联章节</h2><p>进程与线程回答“工作如何被组织”；调度回答“谁先使用处理器”；同步互斥回答“并发如何保持正确”；虚拟内存回答“有限空间如何服务更多程序”。</p><h2>复习中的三层结构</h2><p>第一层记住概念与条件，第二层掌握典型算法，第三层能够在题目场景中判断该调用哪一类模型。把错题归因到这三层之一，复盘会更有针对性。</p><blockquote>真题的价值不只是检验记忆，更是暴露知识之间尚未建立的连接。</blockquote>`
 };
-function categoryView(kind,board=''){
+function categoryView(kind,board='',year=null){
   const builtIn=categoryData[kind]||categoryData.all;
   const channel=site?.channels.find(item=>item.kind===kind);
   const d={...builtIn,name:channel?.title||builtIn.name,desc:channel?.description||builtIn.desc};
-  const list=(kind==='all'?articles:articles.filter(article=>article.kind===kind)).filter(article=>!board||article.topic===board);
+  const list=(kind==='all'?articles:articles.filter(article=>article.kind===kind)).filter(article=>(!board||article.topic===board)&&(!year||BlogYearSummary.dateParts(article.date)?.year===year));
   const links=kind==='all'?[{name:'全部',href:'#/category/all'},...(site?.channels||[]).map(item=>({name:item.title,href:'#/category/'+item.kind}))]:[{name:'全部',href:'#/category/'+kind},...(channel?.boards||builtIn.subs).map(name=>({name,href:'#/category/'+kind+'/topic/'+encodeURIComponent(name)}))];
-  return `<section class="page-hero category-hero"><div class="container"><p class="eyebrow">${escapeText(d.en)}</p><h1>${escapeText(d.name)}</h1><p>${escapeText(d.desc)}</p><div class="subnav">${links.map((item,index)=>`<a class="${(!board&&index===0)||item.name===board?'selected':''}" href="${item.href}">${escapeText(item.name)}</a>`).join('')}</div></div></section><section class="container listing section-pad"><div class="listing-top"><p><strong>${list.length}</strong> 篇记录${board?' · '+escapeText(board):''}</p><span>按时间排序</span></div><div class="article-grid">${list.map(card).join('')||'<p>这个板块还没有文章。</p>'}</div></section>`;
+  return `<section class="page-hero category-hero"><div class="container"><p class="eyebrow">${escapeText(d.en)}</p><h1>${escapeText(d.name)}</h1><p>${escapeText(d.desc)}</p><div class="subnav">${links.map((item,index)=>`<a class="${(!board&&index===0)||item.name===board?'selected':''}" href="${item.href}${year?'?year='+year:''}">${escapeText(item.name)}</a>`).join('')}</div></div></section><section class="container listing section-pad"><div class="listing-top"><p><strong>${list.length}</strong> 篇记录${year?' · '+year+' 年':''}${board?' · '+escapeText(board):''}</p>${year?`<a href="#/category/${escapeText(kind)}${board?'/topic/'+encodeURIComponent(board):''}">查看所有年份 →</a>`:'<span>按时间排序</span>'}</div><div class="article-grid">${list.map(card).join('')||'<p>这个范围内还没有文章。</p>'}</div></section>`;
 }
 function aboutView(){
  const p=site?.profile;if(!p)return '';
@@ -128,7 +106,7 @@ function aboutView(){
  const hobbyImages={'阅读':'hobby-reading-marker.png','吃饭':'hobby-food-marker.png','旅行':'hobby-travel-marker.png'};
  const dailyNote=p.dailyNote||'在书里找答案，在饭点找快乐，在路上找新鲜感。偶尔和代码较较劲，也会为了好吃的绕一点路。这个小站装着我的学习笔记和生活碎片，欢迎随便逛逛。';
  const skills=p.skills.filter(group=>group.items.length);
- return `<section class="about-hero-page"><div class="container about-hero-grid"><div class="about-hero-copy"><p class="eyebrow">ABOUT / 关于</p><h1>你好，我是<br><span>${escapeText(p.name)}。</span></h1>${p.tagline?`<h2>${escapeText(p.tagline)}</h2>`:''}${p.lead?`<p class="about-lead">${escapeText(p.lead)}</p>`:''}<div class="about-actions">${p.email?`<a class="primary-button" href="mailto:${escapeText(p.email)}">给我写信 <span aria-hidden="true">↗</span></a>`:''}<a class="soft-button" href="#/category/all">看看文章</a></div><div class="about-daily"><p class="kicker">LIFE, LATELY / 日常碎片</p><p>${escapeText(dailyNote)}</p><a class="about-interest-link" href="#about-interests">${p.hobbies.map(item=>escapeText(item.title)).join('<span aria-hidden="true"> / </span>')}<span aria-hidden="true"> ↓</span></a></div></div><figure class="about-portrait"><div class="about-portrait-frame"><img src="${escapeText(assetUrl(p.photo))}" alt="${escapeText(p.name)}的头像"></div><figcaption><span>${escapeText(p.name)}</span>${p.location?`<small>${escapeText(p.location)}</small>`:''}</figcaption></figure></div></section>
+ return `<section class="about-hero-page"><div class="container about-hero-grid"><div class="about-hero-copy"><p class="eyebrow">ABOUT / 关于</p><h1>你好，我是<br><span>${escapeText(p.name)}。</span></h1>${p.tagline?`<h2>${escapeText(p.tagline)}</h2>`:''}${p.lead?`<p class="about-lead">${escapeText(p.lead)}</p>`:''}<div class="about-actions"><a class="soft-button" href="#/category/all">看看文章</a></div><div class="about-daily"><p class="kicker">LIFE, LATELY / 日常碎片</p><p>${escapeText(dailyNote)}</p><a class="about-interest-link" href="#about-interests">${p.hobbies.map(item=>escapeText(item.title)).join('<span aria-hidden="true"> / </span>')}<span aria-hidden="true"> ↓</span></a></div></div><figure class="about-portrait"><div class="about-portrait-frame"><img src="${escapeText(assetUrl(p.photo))}" alt="${escapeText(p.name)}的头像"></div><figcaption><span>${escapeText(p.name)}</span>${p.location?`<small>${escapeText(p.location)}</small>`:''}</figcaption></figure></div></section>
  <section class="container about-content section-pad${skills.length?'':' without-skills'}"><div class="identity-card"><p class="kicker">PROFILE</p><h2>我的身份</h2><dl>${fields.map(([title,value])=>`<div><dt>${escapeText(title)}</dt><dd>${escapeText(value)}</dd></div>`).join('')}</dl></div><div class="bio-card"><p class="kicker">INTRODUCTION</p><h2>个人简介</h2>${[p.bio1,p.bio2].filter(Boolean).map(text=>`<p>${escapeText(text)}</p>`).join('')}${p.quote?`<blockquote>${escapeText(p.quote)}</blockquote>`:''}</div>${skills.length?`<div class="skill-card"><p class="kicker">SKILLS</p><h2>技能栈</h2>${skills.map(group=>`<div class="skill-row"><strong>${escapeText(group.group)}</strong><div>${group.items.map(item=>`<span>${escapeText(item)}</span>`).join('')}</div></div>`).join('')}</div>`:''}</section>
  ${p.hobbies.length?`<section class="interest-section" id="about-interests"><div class="container section-pad"><div class="section-heading"><div><p class="kicker">BEYOND THE SCREEN</p><h2>屏幕之外</h2></div><p>读点书，吃顿饭，去远一点的地方。</p></div><div class="interest-grid">${p.hobbies.map((item,index)=>`<article><img src="./assets/${hobbyImages[item.title]||['hobby-reading-marker.png','hobby-food-marker.png','hobby-travel-marker.png'][index%3]}" alt="${escapeText(item.title)}主题配图" loading="lazy"><div><span class="interest-number">${String(index+1).padStart(2,'0')}</span><h3>${escapeText(item.title)}</h3><p>${escapeText(item.description)}</p></div></article>`).join('')}</div></div></section>`:''}`;
 }
@@ -138,6 +116,7 @@ function articleView(id){
  return `<article class="article-page"><header class="article-header container"><a class="back-link" href="#/category/${a.kind}">← 返回${escapeText(channelName(a.kind))}</a><p class="eyebrow">${escapeText(a.topic)}</p><h1>${escapeText(a.title)}</h1><p class="article-deck">${escapeText(a.excerpt)}</p><time>${escapeText(a.date)}</time></header><div class="article-banner"><img src="${coverUrl(a.cover)}" alt=""></div><div class="article-layout container"><aside><a href="#/category/all">全部文章</a></aside><div class="prose">${renderMarkdown(a.content)}</div></div></article>`;
 }
 function setActive(path){
+  path=path.split('?')[0];
   let activePath=path.startsWith('/category/')?path.split('/').slice(0,3).join('/'):path;
   if(path.startsWith('/article/')){const article=articles.find(item=>item.id===decodeURIComponent(path.split('/')[2]));if(article)activePath='/category/'+article.kind}
   document.querySelectorAll('.desktop-nav a,.side-nav a[data-route]').forEach(link=>{const active=link.getAttribute('href')===`#${activePath}`;link.classList.toggle('active',active);if(active)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current')});
@@ -152,11 +131,15 @@ document.addEventListener('click',event=>{const link=event.target.closest('a[hre
 function route(resetScroll=true,overridePath){
   const path=overridePath||location.hash.slice(1)||'/home';
   if(!path.startsWith('/')){document.getElementById(path)?.scrollIntoView();return}
+  // A duplicate home navigation must not destroy a buffering/playing hero.
+  if(path==='/home'&&renderedRoute==='/home'&&heroController&&document.querySelector('.home-hero')){
+    setActive(path);if(resetScroll)window.scrollTo(0,0);return;
+  }
   renderedRoute=path;
-  app.querySelector('#hero-video')?.pause();
+  heroController?.destroy();heroController=null;
   if(path==='/home'){app.innerHTML=homeMarkup;document.querySelector('#latest-grid').innerHTML=articles.slice(0,3).map(card).join('');renderHomeContent();renderYearSummary();renderTasks();renderHero()}
   else if(path==='/about')app.innerHTML=aboutView();
-  else if(path.startsWith('/category/')){const [, ,kind,marker,encoded]=path.split('/');app.innerHTML=categoryView(kind,marker==='topic'&&encoded?decodeURIComponent(encoded):'')}
+  else if(path.startsWith('/category/')){const [pathname,query='']=path.split('?');const [, ,kind,marker,encoded]=pathname.split('/');const rawYear=new URLSearchParams(query).get('year');const year=/^\d{4}$/.test(rawYear||'')?Number(rawYear):null;app.innerHTML=categoryView(kind,marker==='topic'&&encoded?decodeURIComponent(encoded):'',year)}
   else if(path.startsWith('/article/'))app.innerHTML=articleView(path.split('/')[2]);
   setActive(path);if(resetScroll)window.scrollTo(0,0);
 }
@@ -167,13 +150,13 @@ const search=document.querySelector('#search-input'),panel=document.querySelecto
 document.querySelector('#close-search').addEventListener('click',()=>{panel.classList.remove('open');search.value=''});results.addEventListener('click',()=>panel.classList.remove('open'));
 async function refreshContent(){
  if(staticContent){
-   articles=staticContent.articles;site=staticContent.site;
+   articles=BlogYearSummary.published(staticContent.articles);site=staticContent.site;
    applySiteHeader();route(false,location.hash.startsWith('#/')?location.hash.slice(1):'/home');return;
  }
  if(contentRefreshing){contentRefreshPending=true;return}
  contentRefreshing=true;
  try{const [articleResponse,siteResponse]=await Promise.all([fetch('/api/articles',{cache:'no-store'}),fetch('/api/site',{cache:'no-store'})]);if(!articleResponse.ok||!siteResponse.ok)throw Error();
-   const [nextArticles,nextSite]=await Promise.all([articleResponse.json(),siteResponse.json()]);
+   const [rawArticles,nextSite]=await Promise.all([articleResponse.json(),siteResponse.json()]);const nextArticles=BlogYearSummary.published(rawArticles);
    const changed=JSON.stringify(articles)!==JSON.stringify(nextArticles)||JSON.stringify(site)!==JSON.stringify(nextSite);
    const initial=!site;
    articles=nextArticles;site=nextSite;
@@ -197,7 +180,7 @@ window.BlogContentSync?.subscribe(resource=>{
     const pending=new Set(pendingSyncResources);pendingSyncResources.clear();
     if(pending.has('site')||pending.has('articles'))scheduleContentRefresh();
     if(renderedRoute==='/home'&&document.querySelector('.home-hero')){
-      if(pending.has('appearance')){const y=window.scrollY;route(false,'/home');window.scrollTo(0,y)}
+      if(pending.has('appearance'))renderHero();
       else if(pending.has('tasks'))renderTasks();
     }
   },120);

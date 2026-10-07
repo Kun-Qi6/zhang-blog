@@ -12,7 +12,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700;900&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./styles.css?v=6" />
   <link rel="stylesheet" href="./layout.css?v=12" />
-  <link rel="stylesheet" href="./refinements.css?v=4" />
+  <link rel="stylesheet" href="./refinements.css?v=5" />
+  <link rel="stylesheet" href="./media-controls.css?v=1" />
   <link rel="stylesheet" href="./article-images.css?v=2" />
   <link rel="stylesheet" href="./site-content.css?v=2" />
   <link rel="stylesheet" href="./about.css?v=2" />
@@ -48,13 +49,15 @@
 
   <main id="app">
     <section class="hero home-hero home-hero-compact">
-      <img id="hero-image" src="./assets/home-cover.jpg" alt="夕阳下的江面" />
-      <video id="hero-video" playsinline preload="metadata" poster="./assets/home-cover.jpg" hidden aria-label="首页封面视频"></video>
+      <img id="hero-image" src="./assets/home-cover.jpg" alt="夕阳下的江面" decoding="async" fetchpriority="high" />
+      <video id="hero-video" playsinline preload="none" hidden aria-label="首页封面视频"></video>
       <div class="hero-scrim"></div>
       <div class="hero-content container">
         <h1>记录，<em>学习</em>与成长。</h1>
       </div>
-      <div class="hero-bottom"><button id="hero-playback" type="button" hidden aria-label="播放视频" title="播放视频"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 11 7-11 7Z" fill="currentColor" /></svg></button><span class="hero-location">济南 / JINAN</span><a href="#latest">向下阅读 <span aria-hidden="true">↓</span></a></div>
+      <div class="hero-bottom"><div class="hero-media-controls"><button id="hero-playback" type="button" hidden aria-label="播放视频" title="播放视频"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 11 7-11 7Z" /></svg></button><button id="hero-sound" type="button" hidden aria-label="关闭视频声音" title="关闭视频声音"></button><button id="hero-replay" type="button" hidden aria-label="从头重播视频" title="从头重播视频"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10a8 8 0 1 1 1 8M4 4v6h6" /></svg></button></div><span class="hero-location">济南 / JINAN</span><a href="#latest">向下阅读 <span aria-hidden="true">↓</span></a></div>
+      <div class="hero-timeline" hidden><label class="sr-only" for="hero-seek">视频播放进度</label><input id="hero-seek" type="range" min="0" max="1" step="0.1" value="0" disabled><span id="hero-time">0:00 / 0:00</span></div>
+      <p id="hero-media-status" class="sr-only" role="status" aria-live="polite"></p>
     </section>
 
     <section class="home-dashboard container" id="latest">
@@ -83,8 +86,9 @@
           <div id="task-widget-list" class="task-widget-list" aria-live="polite"><p class="widget-empty">还没有设置任务。</p></div>
         </section>
         <section class="rail-block year-widget" aria-labelledby="year-widget-title">
-          <div class="year-widget-top"><p class="kicker">YEAR IN REVIEW</p><h2 id="year-widget-title"><span id="summary-year">2026</span><br>年度总结</h2><p>记录这一年的积累与成长</p></div>
-          <div class="year-stat-grid"><a href="#/category/all"><span>发布文章</span><strong id="summary-total">0</strong><i aria-hidden="true">↗</i></a><a href="#/category/reading"><span>读书记录</span><strong id="summary-reading">0</strong><i aria-hidden="true">↗</i></a><a href="#/category/tech"><span>技术笔记</span><strong id="summary-tech">0</strong><i aria-hidden="true">↗</i></a><a href="#/category/exam"><span>考研总结</span><strong id="summary-exam">0</strong><i aria-hidden="true">↗</i></a></div>
+          <div class="year-widget-top"><p class="kicker">YEAR IN REVIEW</p><label class="year-picker"><span class="sr-only">选择统计年份</span><select id="summary-year-select" aria-label="选择统计年份"></select></label><h2 id="year-widget-title"><span id="summary-year"></span><br>年度总结</h2><p>记录这一年的积累与成长</p></div>
+          <p id="summary-lifetime" class="summary-lifetime"></p>
+          <div class="year-stat-grid"><a data-kind="all" href="#/category/all"><span>本年文章</span><strong id="summary-total">0</strong><i aria-hidden="true">↗</i></a><a data-kind="reading" href="#/category/reading"><span>读书记录</span><strong id="summary-reading">0</strong><i aria-hidden="true">↗</i></a><a data-kind="tech" href="#/category/tech"><span>技术笔记</span><strong id="summary-tech">0</strong><i aria-hidden="true">↗</i></a><a data-kind="exam" href="#/category/exam"><span>考研总结</span><strong id="summary-exam">0</strong><i aria-hidden="true">↗</i></a></div>
           <div class="year-progress-panel"><div id="summary-ring" class="summary-ring"><span id="summary-time">0%</span><small>年度时间</small></div><div class="year-time-copy"><span>今年已走过</span><p><strong id="summary-days">0</strong> 天</p><small>每一篇，都是积累。</small></div></div>
           <div class="year-activity"><p>每月发布 <span id="summary-active-months">0 个活跃月</span></p><div id="summary-months" class="summary-months" aria-label="每月文章数量"></div><div class="month-axis" aria-hidden="true"><span>1月</span><span>6月</span><span>12月</span></div></div>
         </section>
@@ -103,6 +107,8 @@
   <div class="search-panel" id="search-panel" aria-hidden="true"><div class="search-results-shell"><div class="search-panel-top"><p>搜索结果</p><button id="close-search" aria-label="关闭搜索">×</button></div><div id="search-results"></div></div></div>
   <script src="./content-data.js"></script>
   <script src="./content.js?v=3"></script>
-  <script src="./app.js?v=17"></script>
+  <script src="./year-summary.js?v=1"></script>
+  <script src="./hero-media.js?v=2"></script>
+  <script src="./app.js?v=19"></script>
 </body>
 </html>
